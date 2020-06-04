@@ -12,7 +12,7 @@
 	//
 	Update(md interface{}, cols ...string) error
 	//
-	CloseClient()
+	CloseClient() 
 	//
 	Delete(md interface{}, cols ...string) error
 	//

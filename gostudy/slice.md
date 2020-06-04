@@ -22,7 +22,7 @@ b:=make([]int,0)
 if a==nil{
     ok!
 }
-if n==nil{
+if b==nil{
     false!
 }//b的底层数组大小为0，但是不为nil
 ```
