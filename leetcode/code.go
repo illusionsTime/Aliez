@@ -1,7 +1,14 @@
 package main
 
-func main() {
+import (
+	"errors"
+	"fmt"
+)
 
+func main() {
+	A := []int{1, 12, 3, 43, 23, 28, 17, 9}
+	MergeSort(A)
+	fmt.Printf("%v", A)
 }
 
 //leetcode 面试题03
@@ -77,10 +84,63 @@ func gameOfLife(board [][]int) {
 	}
 }
 
-func singleNumbers(nums []int) []int {
-	a:=0
-    for _,v:=range nums{
-        a^=v
-    }
-   
+//归并排序
+func MergeSort(A []int) {
+	//分配额外空间
+	N := len(A)
+	tmp := make([]int, N)
+	if tmp != nil {
+		MSort(A, tmp, 0, N-1)
+	} else {
+		errors.New("No space for tmp array!")
+	}
+
+}
+
+func MSort(A []int, tmp []int, Left int, Right int) {
+	var Center int
+	if Left < Right {
+		//拆分左右数组 递归进行排序
+		Center = (Left + Right) / 2
+		MSort(A, tmp, Left, Center)
+		MSort(A, tmp, Center+1, Right)
+		//合并左右数组
+		Merge(A, tmp, Left, Center+1, Right)
+	}
+}
+
+func Merge(A []int, TmpArray []int, Lptr int, Rptr int, REnd int) {
+	LEnd := Rptr - 1
+	TmpPos := Lptr
+	NumElements := REnd - Lptr + 1
+
+	//
+	for Lptr <= LEnd && Rptr <= REnd {
+		if A[Lptr] <= A[Rptr] {
+			TmpArray[TmpPos] = A[Lptr]
+			TmpPos++
+			Lptr++
+		} else {
+			TmpArray[TmpPos] = A[Rptr]
+			TmpPos++
+			Rptr++
+		}
+	}
+	//
+	for Lptr <= LEnd {
+		TmpArray[TmpPos] = A[Lptr]
+		TmpPos++
+		Lptr++
+	}
+	//
+	for Rptr <= REnd {
+		TmpArray[TmpPos] = A[Rptr]
+		TmpPos++
+		Rptr++
+	}
+
+	//
+	for i := 0; i < NumElements; i, REnd = i+1, REnd-1 {
+		A[REnd] = TmpArray[REnd]
+	}
 }
