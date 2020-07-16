@@ -7,80 +7,20 @@ import (
 
 func main() {
 	A := []int{1, 12, 3, 43, 23, 28, 17, 9}
-	MergeSort(A)
+	InsertSort(A)
 	fmt.Printf("%v", A)
 }
 
-//leetcode 面试题03
-func findRepeatNumber(nums []int) int {
-	n := len(nums)
-	m := make(map[int]int, n)
-	for k, v := range nums {
-		if _, ok := m[v]; ok {
-			return v
+//插入排序
+func InsertSort(A []int) {
+	var tmp, j int
+	N := len(A)
+	for i := 0; i < N; i++ {
+		tmp = A[i]
+		for j = i; j > 0 && A[j-1] > tmp; j-- {
+			A[j] = A[j-1]
 		}
-		m[v] = k
-	}
-	return 0
-}
-
-//leetcode 1111
-func maxDepthAfterSplit(seq string) []int {
-	ans := new(stack)
-	s := make([]int, len(seq))
-	for i := 0; i < len(seq); i++ {
-		if i == 0 {
-			ans.Push(seq[i])
-			s[i] = 0
-		} else if i > 0 {
-			if seq[i] == ans.Top() {
-				s[i] = ans.Len() % 2
-				ans.Push(seq[i])
-			} else {
-				ans.Pop()
-				s[i] = ans.Len() % 2
-			}
-		}
-	}
-	return s
-}
-
-//leetcode 289
-func gameOfLife(board [][]int) {
-	sizex := len(board[0])
-	sizey := len(board)
-	copydata := make([][]int, sizey)
-	for my := 0; my < sizey; my++ {
-		copydata[my] = make([]int, sizex)
-		for mx := 0; mx < sizex; mx++ {
-			copydata[my][mx] = board[my][mx]
-		}
-	}
-
-	for k := 0; k < sizey; k++ {
-		for i := 0; i < sizex; i++ {
-			tmp := 0
-			//if t <2 t>3 die
-			// if t =2 live will live
-			// if t=3 all live
-			for m := -1; m <= 1; m++ {
-				for n := -1; n <= 1; n++ {
-					cm := k + m
-					cn := i + n
-					if !(m == 0 && n == 0) {
-						if ((cm >= 0 && cm < sizey) && (cn >= 0 && cn < sizex)) && (copydata[cm][cn] == 1) {
-							tmp++
-						}
-					}
-
-				}
-			}
-			if (tmp < 2 || tmp > 3) && board[k][i] == 1 {
-				board[k][i] = 0
-			} else if tmp == 3 && board[k][i] == 0 {
-				board[k][i] = 1
-			}
-		}
+		A[j] = tmp
 	}
 }
 
@@ -139,8 +79,60 @@ func Merge(A []int, TmpArray []int, Lptr int, Rptr int, REnd int) {
 		Rptr++
 	}
 
-	//
+	//重新填入A数组
 	for i := 0; i < NumElements; i, REnd = i+1, REnd-1 {
 		A[REnd] = TmpArray[REnd]
 	}
+}
+
+/**
+ * Definition for singly-linked list.
+ * type ListNode struct {
+ *     Val int
+ *     Next *ListNode
+ * }
+ */
+
+type ListNode struct {
+	Val  int
+	Next *ListNode
+}
+
+func mergeKLists(lists []*ListNode) *ListNode {
+	r := len(lists)
+	return msortList(lists, 0, r-1)
+}
+
+func msortList(lists []*ListNode, l int, r int) *ListNode {
+	if l > r {
+		return nil
+	}
+	if l == r {
+		return lists[l]
+	}
+	mid := (l + r) >> 1
+	return mergeTwoLists(msortList(lists, l, mid), msortList(lists, mid+1, r))
+}
+
+func mergeTwoLists(l1 *ListNode, l2 *ListNode) *ListNode {
+	prevhead := new(ListNode)
+	prevhead.Val = -1
+	prev := prevhead
+	for l1 != nil && l2 != nil {
+		if l1.Val <= l2.Val {
+			prev.Next = l1
+			l1 = l1.Next
+		} else {
+			prev.Next = l2
+			l2 = l2.Next
+		}
+		prev = prev.Next
+	}
+
+	if l1 == nil && l2 != nil {
+		prev.Next = l2
+	} else {
+		prev.Next = l1
+	}
+	return prevhead.Next
 }
