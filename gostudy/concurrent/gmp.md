@@ -1,3 +1,29 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [操作系统的线程（thread）和进程（process）](#%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E7%BA%BF%E7%A8%8Bthread%E5%92%8C%E8%BF%9B%E7%A8%8Bprocess)
+- [多进程编程](#%E5%A4%9A%E8%BF%9B%E7%A8%8B%E7%BC%96%E7%A8%8B)
+- [线程的实现模型](#%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%A8%A1%E5%9E%8B)
+- [线程调度模型GMP](#%E7%BA%BF%E7%A8%8B%E8%B0%83%E5%BA%A6%E6%A8%A1%E5%9E%8Bgmp)
+- [M](#m)
+  - [M的结构](#m%E7%9A%84%E7%BB%93%E6%9E%84)
+  - [M的创建](#m%E7%9A%84%E5%88%9B%E5%BB%BA)
+  - [与M有关的结构](#%E4%B8%8Em%E6%9C%89%E5%85%B3%E7%9A%84%E7%BB%93%E6%9E%84)
+- [P](#p)
+  - [P的创建](#p%E7%9A%84%E5%88%9B%E5%BB%BA)
+- [G](#g)
+  - [G的创建](#g%E7%9A%84%E5%88%9B%E5%BB%BA)
+  - [与G有关的结构](#%E4%B8%8Eg%E6%9C%89%E5%85%B3%E7%9A%84%E7%BB%93%E6%9E%84)
+- [调度器](#%E8%B0%83%E5%BA%A6%E5%99%A8)
+  - [几个重要的数据结构](#%E5%87%A0%E4%B8%AA%E9%87%8D%E8%A6%81%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84)
+  - [调度器初始化schedinit](#%E8%B0%83%E5%BA%A6%E5%99%A8%E5%88%9D%E5%A7%8B%E5%8C%96schedinit)
+  - [go func()](#go-func)
+  - [wakep 唤醒M执行任务](#wakep-%E5%94%A4%E9%86%92m%E6%89%A7%E8%A1%8C%E4%BB%BB%E5%8A%A1)
+  - [一轮调度](#%E4%B8%80%E8%BD%AE%E8%B0%83%E5%BA%A6)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 #### 操作系统的线程（thread）和进程（process）
 
 当操作系统运行一个应用程序的时候，os会为这个程序启动一个进程。可以说这个进程是一个包含了应用程序在运行中需要用到和维护的各种资源的容器
@@ -26,7 +52,7 @@ Linux中支持IPC的方法有很多种。从处理机制看 可分为基于通�
    这些信息，主要是考虑到该进程的父进程可能需要他们。
 6. 退出状态 X
 
-### 线程的实现模型
+#### 线程的实现模型
 
 KSE 内核调度实体 顾名思义 内核调度实体就是可以被内核的调度器调度的对象。也成为内核级线程，是os内核调度的最小调度单元。
 
@@ -741,6 +767,11 @@ func execute(gp *g, inheritTime bool) {
 ```
 在前面流程图中把寻找可运行G的过程同意概括了，但是在程序运行中，Go是按照一定的顺序来查找G，这个在上文和程序里都有标识，值得注意的是如果本地P队列也无法找到可运行的G，程序会进入findrunnable全力查找可运行的G
 
+整个过程可以分为两个阶段，具体参考下图
+
+![](../../views/findrunnable.jpg)
+
+值得一提的是执行终结器的G可以理解为垃圾回收器在回收一个对象之前，就会执行与之关联的终结函数。所有的终结函数的执行都会由一个专用的G负责。调度器会在判定这个G已完成任务之后试图获取它，然后把他置为Grunnable状态并放入本地P的可运行G队列。
 ```go
 func findrunnable() (gp *g, inheritTime bool) {
    _g_ := getg()
@@ -753,6 +784,13 @@ top:
 		goto top
    }
    ...
+   //fing是用来执行finalizaer的goroutine
+   //获取执行终结器的G
+   if fingwait && fingwake {
+		if gp := wakefing(); gp != nil {
+			ready(gp, 0, true)
+		}
+	}
    //从本地P的可运行队列获取G
    if gp, inheritTime := runqget(_p_); gp != nil {
 		return gp, inheritTime
