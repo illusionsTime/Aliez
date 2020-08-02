@@ -1,4 +1,4 @@
-## 操作系统的线程（thread）和进程（process）
+#### 操作系统的线程（thread）和进程（process）
 
 当操作系统运行一个应用程序的时候，os会为这个程序启动一个进程。可以说这个进程是一个包含了应用程序在运行中需要用到和维护的各种资源的容器
 * 进程是具有一定独立功能的程序关于某个数据集合上的一次运行活动,进程是系统进行资源分配和调度的一个独立单位。每个进程都有自己的独立内存空间，不同进程通过进程间通信来通信。由于进程比较重量，占据独立的内存，所以上下文进程间的切换开销（栈、寄存器、虚拟内存、文件句柄等）比较大，但相对比较稳定安全
@@ -180,6 +180,127 @@ type p struct {
 }
 
 ```
+##### P的创建 
+
+在调度器初始化的时候，会调整P的数量，这个时候所有的P都是调用procresize新建的，除了分配给当前主线程外，其余的P都被放入全局P列表中。
+procresize默认只有调度器初始化函数schedinit和startTheWorld会调用。后文会讲到调度器初始化，而startTheWorld会激活全部由本地任务的P对象。
+
+```go
+func procresize(nprocs int32) *p {
+   //gomaxprocs=len(allp)
+   old := gomaxprocs
+   ...
+   //新增P
+   for i := old; i < nprocs; i++ {
+		pp := allp[i]
+		if pp == nil {
+			pp = new(p)
+      }
+      //初始化P分配cache
+      pp.init(i)
+      //保存到allp
+		atomicstorep(unsafe.Pointer(&allp[i]), unsafe.Pointer(pp))
+   }
+   ...
+   _g_ := getg()
+	if _g_.m.p != 0 && _g_.m.p.ptr().id < nprocs {
+		// 继续使用当前P
+		_g_.m.p.ptr().status = _Prunning
+		_g_.m.p.ptr().mcache.prepareForSweep()
+	} else {
+		// 释放当前P，获取allp[0]。
+		
+		if _g_.m.p != 0 {
+			...
+			_g_.m.p.ptr().m = 0
+		}
+		_g_.m.p = 0
+		p := allp[0]
+		p.m = 0
+		p.status = _Pidle
+		acquirep(p)
+		...
+	}
+   //从未使用的P中释放资源
+   for i := nprocs; i < old; i++ {
+		p := allp[i]
+		p.destroy()
+      //无法释放P本身，因为它可以被syscall中的M引用
+   }
+   //将没有本地任务的P放到空闲链表
+   var runnablePs *p
+	for i := nprocs - 1; i >= 0; i-- {
+      p := allp[i]
+      //确保不是当前正在使用的P
+		if _g_.m.p.ptr() == p {
+			continue
+		}
+		p.status = _Pidle
+		if runqempty(p) {
+         //放入调度器空闲P链表
+			pidleput(p)
+		} else {
+         //由本地任务，构建链表
+			p.m.set(mget())
+			p.link.set(runnablePs)
+			runnablePs = p
+		}
+	}
+   ...
+   //返回由本地任务的P
+	return runnablePs
+
+}
+```
+
+```go
+func (pp *p) init(id int32) {
+   pp.id = id
+	pp.status = _Pgcstop
+   pp.sudogcache = pp.sudogbuf[:0]
+   ...
+   //为P分配cache对象
+   if pp.mcache == nil {
+		if id == 0 {
+			if mcache0 == nil {
+				throw("missing mcache?")
+			}
+			// Use the bootstrap mcache0. Only one P will get
+			// mcache0: the one with ID 0.
+			pp.mcache = mcache0
+		} else {
+         //创建cache
+			pp.mcache = allocmcache()
+		}
+   }
+   ...
+}
+```
+可以看到P创建之初的状态是Pgstop，在接下来的初始化之后，系统会将其状态设置为Pidle
+
+```go
+func (pp *p) destroy() {
+   //将本地任务转移到全局队列
+   for pp.runqhead != pp.runqtail {
+      //从本地队列尾部弹出
+      pp.runqtail--
+      gp := pp.runq[pp.runqtail%uint32(len(pp.runq))].ptr()
+      //推到全局队列头部
+      globrunqputhead(gp)
+   }
+   ...
+   //释放当前P绑定的cache
+   freemcache(pp.mcache)
+   pp.mcache = nil
+   //将当前P的G复用链转移到全局
+   gfpurge(pp)
+   ...
+   pp.status = _Pdead
+}
+```
+如果P因为allp的缩小而被认为是多余的，那么这些P会被destory，其状态会被置为Pdead。
+
+在destory中会调用gfpurge将P中自由G链表的G全部转移到调度器的自由G列表中，在这之前他的可运行G队列中的G也会转移到调度器的可运行G队列。
 
 * 为什么P的默认数量是CPU的总核心数？
   为了尽可能提高性能，保证n核机器上同时又n个线程并行运行，提高CPU利用率。
@@ -188,9 +309,39 @@ type p struct {
 
 #### G
 
+一个G代表一个Go例程，G的结构如下：
+```go
+type g struct {
+   stack       stack //执行栈
+   sched        gobuf  //用于保存执行现场
+   goid         int64  //唯一序号
+   startpc        uintptr         // pc of goroutine function
+   m            *m   //当前M
+   schedlink    guintptr //链表
+   ...
+}
+```
 在运行时系统接到一个newproc调用，会先检查go函数及其参数的合法性，然后试图从本地P的自由G列表和调度器的自由G列表获取可用的G，如果没有获取到，就新建一个G。新建的G会第一时间被加入到全局G列表。
 随后，系统会对这个G进行一次初始化，包括关联go函数以及设置该G的状态和ID等步骤，在初始化完成后，这个G会立即被存储在本地P的runnext字段中，如果runnext字段中已存有一个G，那么这个已有G就会被踢到该P的可运行G队列末尾。如果该队列已满，那么这个G就只能追加到调度器的可运行G队列中，具体我们调度器这节会进行介绍，参考proc.go的runqputslow()
 
+##### G的创建
+```go
+func malg(stacksize int32) *g {
+	newg := new(g)
+	if stacksize >= 0 {
+		stacksize = round2(_StackSystem + stacksize)
+		systemstack(func() {
+			newg.stack = stackalloc(uint32(stacksize))
+		})
+		newg.stackguard0 = newg.stack.lo + _StackGuard
+		newg.stackguard1 = ^uintptr(0)
+		// Clear the bottom word of the stack. We record g
+		// there on gsignal stack during VDSO on ARM and ARM64.
+		*(*uintptr)(unsafe.Pointer(newg.stack.lo)) = 0
+	}
+	return newg
+}
+```
 * G的状态
 1. Gidle 表示当前G刚被分配 但是未能初始化
 2. Grunnable 表示当前G正在可运行队列中等待运行
@@ -199,6 +350,8 @@ type p struct {
 5. Gwaiting 表示当前G正在阻塞
 6. Gdead 表示当前G正在闲置
 7. Gcopystack 表示当前G的栈正被移动
+
+值得一提的是进入死亡状态的G是可以被重新初始化并使用的，他们会被放入本地P或者调度器的自由G列表。
 ##### 与G有关的结构
 | 名称              | 描述                                  |
 | ----------------- | ------------------------------------- |
@@ -259,7 +412,7 @@ func schedinit() {
 	if n, ok := atoi32(gogetenv("GOMAXPROCS")); ok && n > 0 {
 		procs = n
    }
-   //调整P的数量
+   //调整P的数量 这个在上文提到过
    if procresize(procs) != nil {
 		throw("unknown runnable goroutine during bootstrap")
 	}
@@ -558,8 +711,250 @@ top:
 		resetspinning()
    }
    ...
+   //如果该G锁定，唤醒锁定的M运行该G
+   if gp.lockedm != 0 {
+		// Hands off own p to the locked m,
+		// then blocks waiting for a new p.
+		startlockedm(gp)
+		goto top
+	}
    //执行goroutine任务函数
    execute(gp, inheritTime)
 }
 ```
+值得注意的是如果M被标记为自旋状态，意味着还没有找到G来运行，而无论是因为找到了可运行的G又或者因为始终未找到可运行的G而需要停止M，当前M都会退出自旋状态。提一点一般情况下，运行时系统中至少会有一个自旋的M，调度器会尽量保证有一个自旋M的存在。除非没有自旋的M，调度器是不会新启用或回复一个M去运行新G的，一旦需要新启用一个M或者恢复一个M，他最初都是处于自旋状态。
 整个一轮调度过程如表示：
+
+![](../../views/schedule.jpg)
+```go
+func execute(gp *g, inheritTime bool) {
+   _g_ := getg()
+   _g_.m.curg = gp
+   gp.m = _g_.m
+   ...
+	casgstatus(gp, _Grunnable, _Grunning)
+	gp.waitsince = 0
+	gp.preempt = false
+   gp.stackguard0 = gp.stack.lo + _StackGuard
+   gogo(&gp.sched)
+}
+```
+在前面流程图中把寻找可运行G的过程同意概括了，但是在程序运行中，Go是按照一定的顺序来查找G，这个在上文和程序里都有标识，值得注意的是如果本地P队列也无法找到可运行的G，程序会进入findrunnable全力查找可运行的G
+
+```go
+func findrunnable() (gp *g, inheritTime bool) {
+   _g_ := getg()
+   
+top:
+   _p_ := _g_.m.p.ptr()
+   //仍然会先判断gcwaiting
+	if sched.gcwaiting != 0 {
+		gcstopm()
+		goto top
+   }
+   ...
+   //从本地P的可运行队列获取G
+   if gp, inheritTime := runqget(_p_); gp != nil {
+		return gp, inheritTime
+   }
+   //从调度器的可运行G队列获取
+   if sched.runqsize != 0 {
+		lock(&sched.lock)
+		gp := globrunqget(_p_, 0)
+		unlock(&sched.lock)
+		if gp != nil {
+			return gp, false
+		}
+   }
+   //从I/O轮询器获取G
+   if netpollinited() && atomic.Load(&netpollWaiters) > 0 && atomic.Load64(&sched.lastpoll) != 0 {
+      //尝试从netpoller获取Glist
+      if list := netpoll(0); !list.empty() { // non-blocking
+         //表头G
+         gp := list.pop()
+         //将其余队列放入sched的可运行G队列
+			injectglist(&list)
+			casgstatus(gp, _Gwaiting, _Grunnable)
+			if trace.enabled {
+				traceGoUnpark(gp, 0)
+			}
+			return gp, false
+		}
+   }
+   ...
+   //这里进入这一步有两个条件，后文会讲
+   //通过伪随机 从全局P队列的P的可运行G队列中偷取G
+   for i := 0; i < 4; i++ {
+		for enum := stealOrder.start(fastrand()); !enum.done(); enum.next() {
+         ...
+         stealRunNextG := i > 2
+         p2 := allp[enum.position()]
+         //从p2的可运行G队列中盗取一般的G到本地P的G队列
+         if gp := runqsteal(_p_, p2, stealRunNextG); gp != nil {
+				return gp, false
+         }
+         ...
+         	if i > 2 && shouldStealTimers(p2) {
+				tnow, w, ran := checkTimers(p2, now)
+				now = tnow
+				if w != 0 && (pollUntil == 0 || w < pollUntil) {
+					pollUntil = w
+				}
+				if ran {
+					//运行计时器可能已经使任意数量的G就绪，并将它们添加到P的本地运行队列中。这使runqsteal的假设无效，即总是有空间添加偷来的G。所以现在检查是否有一个本地的G要运行。
+					if gp, inheritTime := runqget(_p_); gp != nil {
+						return gp, inheritTime
+					}
+					ranTimer = true
+				}
+			}
+      }
+   }
+   
+   if ranTimer {
+		// Running a timer may have made some goroutine ready.
+		goto top
+   }
+
+   stop:
+   //获取执行GC标记任务的G
+   //当前是否处于GC标记阶段？本地P是否可用于GC标记任务？
+   if gcBlackenEnabled != 0 && _p_.gcBgMarkWorker != 0 && gcMarkWorkAvailable(_p_) {
+      _p_.gcMarkWorkerMode = gcMarkWorkerIdleMode
+      //将本地P的GC标记专用G职位Grunnable
+		gp := _p_.gcBgMarkWorker.ptr()
+		casgstatus(gp, _Gwaiting, _Grunnable)
+		if trace.enabled {
+			traceGoUnpark(gp, 0)
+		}
+		return gp, false
+   }
+   
+   ...
+   //
+   lock(&sched.lock)
+   //检查GC回收状态
+	if sched.gcwaiting != 0 || _p_.runSafePointFn != 0 {
+		unlock(&sched.lock)
+		goto top
+   }
+   //尝试从调度器可运行G队列获取G
+	if sched.runqsize != 0 {
+		gp := globrunqget(_p_, 0)
+		unlock(&sched.lock)
+		return gp, false
+	}
+	if releasep() != _p_ {
+		throw("findrunnable: wrong p")
+   }
+   //如果找不到G，会解除本地P与当前M的关联
+   //并将该P放入调度器的空闲P列表 
+	pidleput(_p_)
+   unlock(&sched.lock)
+   ...
+   //再次检查全局P列表
+   //遍历全局P列表的P，并检查他们的可运行G队列
+   for _, _p_ := range allpSnapshot {
+		if !runqempty(_p_) {
+			lock(&sched.lock)
+			_p_ = pidleget()
+         unlock(&sched.lock)
+         //发现一个P不是空的，就从调度器pidle中取出一个P
+         //判断可用后与当前M关联在一起，返回第一阶段重新搜索可运行的G
+			if _p_ != nil {
+				acquirep(_p_)
+				if wasSpinning {
+					_g_.m.spinning = true
+					atomic.Xadd(&sched.nmspinning, 1)
+				}
+				goto top
+			}
+			break
+		}
+   }
+   //再次获取GC的G
+   //判断gcBlackenEnabled以及当前GC相关的全局资源是否可用
+   if gcBlackenEnabled != 0 && gcMarkWorkAvailable(nil) {
+      lock(&sched.lock)
+      //从调度器pidle里拿出一个P
+      _p_ = pidleget()
+		if _p_ != nil && _p_.gcBgMarkWorker == 0 {
+			pidleput(_p_)
+			_p_ = nil
+		}
+      unlock(&sched.lock)
+      //如果这个P持有GC标记，关联这个P与当前M
+		if _p_ != nil {
+			acquirep(_p_)
+			if wasSpinning {
+				_g_.m.spinning = true
+				atomic.Xadd(&sched.nmspinning, 1)
+			}
+			// 再次执行第二阶段.
+			goto stop
+		}
+   }
+   //再次检查netpoll，先判断netpoller是否初始化，是否有I/O操作
+   if netpollinited() && (atomic.Load(&netpollWaiters) > 0 || pollUntil != 0) && atomic.Xchg64(&sched.lastpoll, 0) != 0 {
+      atomic.Store64(&sched.pollUntil, uint64(pollUntil))
+      //尝试从netpoller获取Glist
+      list := netpoll(delta)
+      if faketime != 0 && list.empty() {
+         stopm()
+			goto top
+      }
+      ...
+      _p_ = pidleget()
+      ...
+		if _p_ == nil {
+			injectglist(&list)
+		} else {
+			acquirep(_p_)
+			if !list.empty() {
+				gp := list.pop()
+				injectglist(&list)
+				casgstatus(gp, _Gwaiting, _Grunnable)
+				if trace.enabled {
+					traceGoUnpark(gp, 0)
+				}
+				return gp, false
+			}
+			if wasSpinning {
+				_g_.m.spinning = true
+				atomic.Xadd(&sched.nmspinning, 1)
+			}
+			goto top
+		}
+   }
+
+   //休眠M
+   stopm()
+	goto top
+}
+```
+netpoller是Go为了在操作系统提供的异步I/O基础组件之上，实现自己的阻塞时I/O而编写的一个子程序。
+从netpoller这里获取G，即获取那些已经接受到通知的G，它们既然已经可以进行网络读写操作了，那么调度器理应让他们转入Grunnable状态并等待运行。
+
+* 执行从全局P列表的P中可运行G队列获取P是由先决条件的
+：
+  ```go
+  procs := uint32(gomaxprocs)
+  //如果当前处于自旋状态的M的数量的两倍大于非空闲P的数量 跳过这个步骤
+  if !_g_.m.spinning && 2*atomic.Load(&sched.nmspinning) >= procs-atomic.Load(&sched.npidle) {
+		goto stop
+   }
+	if !_g_.m.spinning {
+		_g_.m.spinning = true
+		atomic.Xadd(&sched.nmspinning, 1)
+	}
+  ```
+  第一个条件是：除了当前P还有非空闲P。空闲的P的可运行G队列必定为空。也就是说如果出了本地P之外其他所有的P都是空闲的，那么就没有必要再去他们那里获取G。
+  第二个条件是：当前M不处于自旋状态并且处于自旋状态M的数量大于非空闲P数量的二分之一，那么就会跳过这个阶段。仅有当前M处于自旋状态或者处于自旋状态M的数量小于非空闲P的数量的二分之一。*这主要是为了控制自旋M的数量，过多的自旋M会消耗过多CPU资源。*
+
+  #### 特殊的g0和m0
+  
+  在运行时，每个M都会有一个特殊的G，一般称为M的g0。g0是一个默认8KB栈内存的G，他的栈内存地址被传给newosproc函数，作为系统线程默认的堆栈空间。在之前M创建的时候，我们看到每个M创建之初都会调用malg创建一个g0。也就是说每个g0都是运行时系统在初始化M是创建并分配给M的。
+
+  M的g0一般用于执行调度、垃圾回收、栈管理等方面的任务。除了g0外，其他M运行的G都可以视为用户级别的G。
+
+  除了每个M都有属于他的g0外，还存在一个runtime.g0。这个g0用于执行引导程序，它运行在Go程序拥有的第一个内核线程中，这个内核线程也被称为runtime.m0。
