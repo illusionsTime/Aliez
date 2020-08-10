@@ -6,9 +6,10 @@ import (
 )
 
 func main() {
-	A := []int{1, 12, 3, 43, 23, 28, 17, 9}
-	InsertSort(A)
-	fmt.Printf("%v", A)
+	nums := []int{4, 5, 6, 7, 0, 1, 2}
+	n := search(nums, 0)
+	//mid := size / 2
+	fmt.Printf("%v", n)
 }
 
 //插入排序
@@ -135,4 +136,58 @@ func mergeTwoLists(l1 *ListNode, l2 *ListNode) *ListNode {
 		prev.Next = l1
 	}
 	return prevhead.Next
+}
+
+//leetcode HOT 33
+func search(nums []int, target int) int {
+	size := len(nums)
+	if size == 1 && nums[0] == target {
+		return 0
+	} else if size == 1 && nums[0] != target {
+		return -1
+	}
+	var mid int
+	l, r := 0, size-1
+	for l <= r {
+		mid = (l + r) / 2
+		fmt.Printf("%v", mid)
+		if nums[mid] == target {
+			return mid
+		}
+		if nums[0] <= nums[mid] {
+			if target < nums[mid] && target >= nums[0] {
+				//在前半段查找
+				r = mid - 1
+			} else {
+				l = mid + 1
+			}
+		} else {
+			if target > nums[mid] && target <= nums[size-1] {
+				l = mid + 1
+			} else {
+				r = mid - 1
+			}
+		}
+	}
+	return -1
+}
+
+//leetcode HOT 139
+func wordBreak(s string, wordDict []string) bool {
+	size := len(s)
+	dp := make([]bool, size+1)
+	dp[0] = true
+	word := make(map[string]bool, len(wordDict))
+	for _, v := range wordDict {
+		word[v] = true
+	}
+	for i := 1; i <= size; i++ {
+		for j := 0; j < i; j++ {
+			if dp[j] && word[s[j:i]] {
+				dp[i] = true
+				break
+			}
+		}
+	}
+	return dp[size]
 }
