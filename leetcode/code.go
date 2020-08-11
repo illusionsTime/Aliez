@@ -191,3 +191,56 @@ func wordBreak(s string, wordDict []string) bool {
 	}
 	return dp[size]
 }
+
+//leetcode HOT 102
+type TreeNode struct {
+	Val   int
+	Left  *TreeNode
+	Right *TreeNode
+}
+
+func levelOrder(root *TreeNode) [][]int {
+	ret := [][]int{}
+	if root == nil {
+		return ret
+	}
+	queue := []*TreeNode{root}
+	for len(queue) > 0 {
+		l := len(queue)
+		ans := make([]int, 0)
+		for i := 0; i < l; i++ {
+			node := queue[i]
+			ans = append(ans, node.Val)
+			if node.Left != nil {
+				queue = append(queue, node.Left)
+			}
+			if node.Right != nil {
+				queue = append(queue, node.Right)
+			}
+		}
+		ret = append(ret, ans)
+		queue = queue[l:]
+	}
+	return ret
+}
+
+func levelOrderDFS(root *TreeNode) [][]int {
+	ret := [][]int{}
+	if root == nil {
+		return ret
+	}
+	var SerchRoot func(root *TreeNode, index int)
+	SerchRoot = func(root *TreeNode, index int) {
+		if root == nil {
+			return
+		}
+		if len(ret) == index {
+			ret = append(ret, []int{})
+		}
+		ret[index] = append(ret[index], root.Val)
+		SerchRoot(root.Left, index+1)
+		SerchRoot(root.Right, index+1)
+	}
+	SerchRoot(root, 0)
+	return ret
+}
