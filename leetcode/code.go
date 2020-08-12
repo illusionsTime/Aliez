@@ -244,3 +244,58 @@ func levelOrderDFS(root *TreeNode) [][]int {
 	SerchRoot(root, 0)
 	return ret
 }
+
+// leetcode 257
+func binaryTreePaths(root *TreeNode) []string {
+	path := make([]string, 0)
+	if root == nil {
+		return path
+	}
+	var DFS func(root *TreeNode, str string)
+	DFS = func(root *TreeNode, str string) {
+		if root == nil {
+			return
+		}
+		str = fmt.Sprintf("%s%d->", str, root.Val)
+		if root.Left == nil && root.Right == nil {
+			path = append(path, str[:len(str)-2])
+		}
+		DFS(root.Left, str)
+		DFS(root.Right, str)
+	}
+	DFS(root, "")
+	return path
+}
+
+//leetcode 107
+func levelOrderBottom(root *TreeNode) [][]int {
+	ret := [][]int{}
+	if root == nil {
+		return ret
+	}
+	queue := []*TreeNode{root}
+	for len(queue) > 0 {
+		l := len(queue)
+		ans := make([]int, 0)
+		for i := 0; i < l; i++ {
+			node := queue[i]
+			ans = append(ans, node.Val)
+			if node.Left != nil {
+				queue = append(queue, node.Left)
+			}
+			if node.Right != nil {
+				queue = append(queue, node.Right)
+			}
+		}
+		ret = append(ret, ans)
+		queue = queue[l:]
+	}
+	//反转数组
+	l := len(ret)
+	for i := 0; i < l/2; i++ {
+		tmp := ret[i]
+		ret[i] = ret[l-i-1]
+		ret[l-i-1] = tmp
+	}
+	return ret
+}
