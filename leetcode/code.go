@@ -94,11 +94,6 @@ func Merge(A []int, TmpArray []int, Lptr int, Rptr int, REnd int) {
  * }
  */
 
-type ListNode struct {
-	Val  int
-	Next *ListNode
-}
-
 func mergeKLists(lists []*ListNode) *ListNode {
 	r := len(lists)
 	return msortList(lists, 0, r-1)
@@ -193,12 +188,6 @@ func wordBreak(s string, wordDict []string) bool {
 }
 
 //leetcode HOT 102
-type TreeNode struct {
-	Val   int
-	Left  *TreeNode
-	Right *TreeNode
-}
-
 func levelOrder(root *TreeNode) [][]int {
 	ret := [][]int{}
 	if root == nil {
@@ -298,4 +287,88 @@ func levelOrderBottom(root *TreeNode) [][]int {
 		ret[l-i-1] = tmp
 	}
 	return ret
+}
+
+//leetcode 144
+func preorderTraversal(root *TreeNode) []int {
+	ret := make([]int, 0)
+	if root == nil {
+		return ret
+	}
+	var PT func(root *TreeNode)
+	PT = func(root *TreeNode) {
+		ret = append(ret, root.Val)
+		if root.Left != nil {
+			PT(root.Left)
+		}
+		if root.Right != nil {
+			PT(root.Right)
+		}
+	}
+	PT(root)
+	return ret
+}
+
+func preorderTraversal2(root *TreeNode) []int {
+	ret := make([]int, 0)
+	if root == nil {
+		return ret
+	}
+	stack := []*TreeNode{root}
+	for len(stack) > 0 {
+		node := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+		ret = append(ret, node.Val)
+		if node.Right != nil {
+			stack = append(stack, node.Right)
+		}
+		if node.Left != nil {
+			stack = append(stack, node.Left)
+		}
+	}
+	return ret
+}
+
+//leetcode 114
+func flatten(root *TreeNode) {
+	if root == nil {
+		return
+	}
+	stack := []*TreeNode{root}
+	var tmp *TreeNode
+	for len(stack) > 0 {
+		node := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+		if tmp != nil {
+			tmp.Right, tmp.Left = nil, node
+		}
+		left, right := tmp.Left, tmp.Right
+		if right != nil {
+			stack = append(stack, node.Right)
+		}
+		if left != nil {
+			stack = append(stack, node.Left)
+		}
+		tmp = node
+	}
+}
+
+func flatten3(root *TreeNode) {
+	if root == nil {
+		return
+	}
+	curr := root
+	for curr != nil {
+		if curr.Left != nil {
+			next := curr.Left
+			per := next
+			for per.Right != nil {
+				per = per.Right
+			}
+			per.Right = curr.Right
+			curr.Left = nil
+			curr.Right = next
+		}
+		curr = curr.Right
+	}
 }

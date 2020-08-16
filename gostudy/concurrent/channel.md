@@ -6,6 +6,23 @@ Go鼓励“应该以通信作为手段来共享内存”，channel则是最直�
 数据传递方向的不同意味着他们类型的不同。
 *同步与异步的区别在于是否带有缓冲槽* 调用内建函数cap判断
 
+runtime.go/chan
+```go
+type hchan struct {
+	qcount   uint           // 队列中的总数据
+	dataqsiz uint           // 缓冲槽大小
+	buf      unsafe.Pointer // 指向dataqsiz的指针
+	elemsize uint16         // 数据项大小
+	closed   uint32         
+	elemtype *_type // 数据项类型
+	sendx    uint   // send index
+	recvx    uint   // receive index
+	recvq    waitq  // list of recv waiters
+	sendq    waitq  // list of send waiters
+	lock mutex
+}
+```
+
 ### select 
 select语句是一种仅能用于通道发送和接受操作得专用语句。一条select语句执行时会选择其中的某一条分支并执行。
 

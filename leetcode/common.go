@@ -37,3 +37,16 @@ func (s stack) Top() interface{} {
 func (s *stack) Len() int {
 	return len(*s)
 }
+
+//二叉树
+type TreeNode struct {
+	Val   int
+	Left  *TreeNode
+	Right *TreeNode
+}
+
+//链表
+type ListNode struct {
+	Val  int
+	Next *ListNode
+}
