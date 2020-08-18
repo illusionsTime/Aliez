@@ -93,7 +93,6 @@ func Merge(A []int, TmpArray []int, Lptr int, Rptr int, REnd int) {
  *     Next *ListNode
  * }
  */
-
 func mergeKLists(lists []*ListNode) *ListNode {
 	r := len(lists)
 	return msortList(lists, 0, r-1)
