@@ -371,3 +371,83 @@ func flatten3(root *TreeNode) {
 		curr = curr.Right
 	}
 }
+
+//leetcode 203
+func removeElements(head *ListNode, val int) *ListNode {
+	sentry := new(ListNode)
+	sentry.Next = head
+	p := sentry
+	for p.Next != nil {
+		if p.Next.Val == val {
+			tmp := p.Next
+			p.Next = tmp.Next
+		} else {
+			p = p.Next
+		}
+	}
+	return sentry.Next
+}
+
+//leetcode 147
+func insertionSortList(head *ListNode) *ListNode {
+	if head.Next == nil || head == nil {
+		return head
+	}
+	sentry := ListNode{Next: head}
+	for head.Next != nil {
+
+	}
+
+}
+
+//leetcode 160
+func getIntersectionNode(headA, headB *ListNode) *ListNode {
+	if headA == nil || headB == nil {
+		return nil
+	}
+	l1, l2 := headA, headB
+	for l1 != l2 {
+		if l1 == nil {
+			l1 = headB
+		} else {
+			l1 = l1.Next
+		}
+
+		if l2 == nil {
+			l2 = headA
+		} else {
+			l2 = l2.Next
+		}
+
+	}
+	return l1
+}
+
+//mianshi 2.08
+func detectCycle(head *ListNode) *ListNode {
+	fast, slow := head, head
+	if head == nil {
+		return nil
+	}
+	for fast != nil {
+		//避免越界
+		if fast.Next == nil || slow.Next == nil {
+			return nil
+		}
+		fast = fast.Next.Next
+		slow = slow.Next
+		if fast == slow {
+			break
+		}
+	}
+	//避免无环时导致越界
+	if fast == nil || slow == nil {
+		return nil
+	}
+	slow = head
+	for slow != fast {
+		slow = slow.Next
+		fast = fast.Next
+	}
+	return fast
+}
