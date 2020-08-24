@@ -122,21 +122,33 @@ func detectCycle(head *ListNode) *ListNode {
 
 <img src="../../views/链表求环.png" width = "700" height = "500" alt="图片名称" align=center />
 
-可以得到以下等式
+让快指针是慢指针的2倍，得到  
+S1=L+c+n*T (n为快指针走过的圈数，n>=1)  
+S2=L+c  
+S1=2S2  
+得到L=(T-c)+(n-1)T  
+也就是说head到环节点的路程是相遇处点到环节点剩余路程+n倍环的长度  
+意味着只要两个指针相同速度同时从head和相遇处出发，一定相会于环节点处
 
-S1=L+c+N*T (N表示快指针在环路上转的圈数 N>=1)
-
-S2=L+c+n*T(n表示慢指针在环路上转的圈数 n>=0)
-
-假设k为快慢指针的速度比 那么S1=k*S2  带入上述两式
-
-得到 L=(N-n * k)/(k-1)T-c=(T-c)+((N-n * k)/(k-1)-1)*T
-
-后式的值为>=0的整数，也就是说L的长度是T-c长度加上e倍的环周长
-
-也就是当速度相同的两个指针一个在head处一个在c处他们同时出发一定相遇在环节点处
-
-
-
+* 删除排序链表重复元素
+```go
+func deleteDuplicates(head *ListNode) *ListNode {
+	if head == nil || head.Next == nil {
+		return head
+	}
+	h := head
+	var tmp *ListNode
+	for h.Next != nil {
+		if h.Next.Val == h.Val {
+			tmp = h.Next.Next
+			h.Next.Next = nil
+			h.Next = tmp
+		} else {
+			h = h.Next
+		}
+	}
+	return head
+}
+```
 
 

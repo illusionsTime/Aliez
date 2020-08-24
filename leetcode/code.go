@@ -451,3 +451,22 @@ func detectCycle(head *ListNode) *ListNode {
 	}
 	return fast
 }
+
+//leetcode 83
+func deleteDuplicates(head *ListNode) *ListNode {
+	if head == nil || head.Next == nil {
+		return head
+	}
+	h := head
+	var tmp *ListNode
+	for h.Next != nil {
+		if h.Next.Val == h.Val {
+			tmp = h.Next.Next
+			h.Next.Next = nil
+			h.Next = tmp
+		} else {
+			h = h.Next
+		}
+	}
+	return head
+}
