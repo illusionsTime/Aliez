@@ -390,14 +390,26 @@ func removeElements(head *ListNode, val int) *ListNode {
 
 //leetcode 147
 func insertionSortList(head *ListNode) *ListNode {
-	if head.Next == nil || head == nil {
+	if head == nil || head.Next == nil {
 		return head
 	}
-	sentry := ListNode{Next: head}
-	for head.Next != nil {
-
+	sentry := &ListNode{
+		Next: head,
 	}
-
+	p := head.Next
+	head.Next = nil
+	for p != nil {
+		prev := sentry
+		next := p.Next
+		for prev.Next != nil && prev.Next.Val <= p.Val {
+			prev = prev.Next
+		}
+		// prev.Next.Val > p.Val
+		p.Next = prev.Next
+		prev.Next = p
+		p = next
+	}
+	return sentry.Next
 }
 
 //leetcode 160

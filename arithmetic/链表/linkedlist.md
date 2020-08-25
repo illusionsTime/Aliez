@@ -32,7 +32,31 @@ type ListNode struct {
        |       |
        |->X————>
 ```
-
+* 链表进行插入排序
+```go 
+  func insertionSortList(head *ListNode) *ListNode {
+	if head == nil || head.Next == nil {
+		return head
+	}
+	sentry := &ListNode{
+		Next: head,
+	}
+	p := head.Next
+	head.Next = nil //需要做截断
+	for p != nil {
+		prev := sentry
+		next := p.Next
+		for prev.Next != nil && prev.Next.Val <= p.Val {
+			prev = prev.Next
+		}
+		// prev.Next.Val > p.Val
+		p.Next = prev.Next
+		prev.Next = p
+		p = next
+	}
+	return sentry.Next
+}
+```
 * 查找双链表的第一个公共结点
 双指针法，即“无论天涯海角，我会追随你走过的路”
 通过消除长度差，l1走到头走另一个链表，l2走到头走另一个链表,如果相交l1==l2,如果不相交，l1，l2都为nil
@@ -150,5 +174,34 @@ func deleteDuplicates(head *ListNode) *ListNode {
 	return head
 }
 ```
+* 合并两个排序链表
+  输入两个递增排序的链表，合并这两个链表并使新链表中的节点仍然是递增排序的。
+
+  *合并链表采用伪头节点的方式相当于merge例程*
+```go
+func mergeTwoLists(l1 *ListNode, l2 *ListNode) *ListNode {
+	h := new(ListNode)
+	h.Val = -1
+	p := h
+	for l1 != nil && l2 != nil {
+		if l1.Val <= l2.Val {
+			p.Next = l1
+			l1 = l1.Next
+		} else {
+			p.Next = l2
+			l2 = l2.Next
+		}
+	}
+
+	if l1 == nil && l2 != nil {
+		p.Next = l2
+	} else {
+		p.Next = l1
+	}
+	return h.Next
+}
+
+```
+
 
 
