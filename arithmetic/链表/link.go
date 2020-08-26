@@ -21,7 +21,7 @@ func main() {
 		Val:  4,
 		Next: b,
 	}
-
+	fmt.Scanf("%v", &a)
 	n := insertionSortList(a)
 	for n != nil {
 		fmt.Printf("%v", n)

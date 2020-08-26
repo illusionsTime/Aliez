@@ -6,8 +6,8 @@ import (
 )
 
 func main() {
-	nums := []int{4, 5, 6, 7, 0, 1, 2}
-	n := search(nums, 0)
+	nums := []int{7, 1, 5, 3, 6, 4}
+	n := maxProfit(nums)
 	//mid := size / 2
 	fmt.Printf("%v", n)
 }
@@ -481,4 +481,87 @@ func deleteDuplicates(head *ListNode) *ListNode {
 		}
 	}
 	return head
+}
+
+//leetcode 343
+func integerBreak(n int) int {
+	dp := make([]int, n+1)
+	dp[0], dp[1] = 0, 0
+	for i := 2; i <= n; i++ {
+		max := 0
+		for j := 1; j < i; j++ {
+			fast := j * (i - j)
+			last := j * dp[i-j]
+			if fast > last && fast > max {
+				max = fast
+			} else if last >= fast && last > max {
+				max = last
+			}
+		}
+		dp[i] = max
+	}
+	return dp[n]
+}
+
+func solveStep(N int) int {
+	if N == 1 {
+		return 1
+	} else if N == 2 {
+		return 1
+	} else if N == 3 {
+		return 2
+	}
+	return solveStep(N-1) + solveStep(N-3)
+}
+
+//jianzhi 63
+func maxProfit(prices []int) int {
+	size := len(prices)
+	if size == 0 || size == 1 {
+		return 0
+	}
+	profit := 0
+	cost := prices[0]
+	for i := 1; i < size; i++ {
+		cost = min(prices[i], cost)
+		profit = max(profit, prices[i]-cost)
+	}
+	return profit
+}
+
+//jianzhi 47
+func maxValue(grid [][]int) int {
+	n := len(grid)
+	m := len(grid[0])
+	dp := make([][]int, n)
+	for i := 0; i < m; i++ {
+		dp[i] = make([]int, m)
+	}
+	dp[0][0] = grid[0][0]
+	for i := 0; i < n; i++ {
+		for j := 0; j < m; j++ {
+			if j == 0 && i != 0 {
+				dp[i][j] = dp[i-1][j] + grid[i][j]
+			} else if i == 0 && j != 0 {
+				dp[i][j] = dp[i][j-1] + grid[i][j]
+			} else if i != 0 && j != 0 {
+				dp[i][j] = max(dp[i][j-1], dp[i-1][j]) + grid[i][j]
+			}
+		}
+	}
+	return dp[n][m]
+}
+
+//jianzhi 42
+func maxSubArray(nums []int) int {
+	if len(nums) == 1 {
+		return nums[0]
+	}
+	sum := 0
+	x := nums[0]
+	for i := 0; i < len(nums); i++ {
+		sum = max(sum+nums[i], nums[i])
+		x = max(x, sum)
+	}
+	return x
 }
