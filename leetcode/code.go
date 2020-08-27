@@ -565,3 +565,36 @@ func maxSubArray(nums []int) int {
 	}
 	return x
 }
+
+//leetcode 200
+func numIslands(grid [][]byte) int {
+	n := len(grid)
+	if n == 0 {
+		return 0
+	}
+	m := len(grid[0])
+	num := 0
+	var DFS func(x, y int)
+	DFS = func(x, y int) {
+		if x < 0 || y < 0 || y >= m || x >= n {
+			return
+		}
+		if grid[x][y] == '0' {
+			return
+		}
+		grid[x][y] = '0'
+		DFS(x+1, y)
+		DFS(x-1, y)
+		DFS(x, y+1)
+		DFS(x, y-1)
+	}
+	for i := 0; i < n; i++ {
+		for j := 0; j < m; j++ {
+			if grid[i][j] == '1' {
+				num += 1
+				DFS(i, j)
+			}
+		}
+	}
+	return num
+}
