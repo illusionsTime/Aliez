@@ -598,3 +598,53 @@ func numIslands(grid [][]byte) int {
 	}
 	return num
 }
+
+func judge(root *TreeNode) bool {
+	ret := make([]int, 0)
+	num := 0
+	var jieguo bool
+	if root == nil {
+		return false
+	}
+	var PT func(root *TreeNode)
+	PT = func(root *TreeNode) {
+		if root.Left == nil && root.Right == nil {
+			ret = append(ret, root.Val)
+			if len(ret) == 2 {
+				num = ret[1] - ret[0]
+			} else if len(ret) > 2 {
+				if root.Val-ret[len(ret)-1] != num {
+					jieguo = false
+				}
+			}
+		}
+		if root.Left != nil {
+			PT(root.Left)
+		}
+		if root.Right != nil {
+			PT(root.Right)
+		}
+	}
+	PT(root)
+	if len(ret) <= 2 || jieguo == false {
+		return false
+	}
+	return true
+}
+
+//jianzhi 28
+func isSymmetric(root *TreeNode) bool {
+	if root == nil {
+		return true
+	}
+	return dfsIsSymmetric(root.Left, root.Right)
+}
+func dfsIsSymmetric(a, b *TreeNode) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if (a == nil && b != nil) || (a != nil && b == nil) || (a.Val != b.Val) {
+		return false
+	}
+	return dfsIsSymmetric(a.Left, b.Right) && dfsIsSymmetric(a.Right, b.Left)
+}
