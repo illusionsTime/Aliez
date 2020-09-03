@@ -1,7 +1,23 @@
 package main
 
-func main() {
+import "fmt"
 
+func main() {
+	num := []int{1, 3, 5, 8, 0}
+	res := minArray(num)
+	fmt.Printf("%v", res)
+}
+
+//常用数据结构
+/*
+linkedlist
+tree
+*/
+
+type TreeNode struct {
+	Val   int
+	Left  *TreeNode
+	Right *TreeNode
 }
 
 //剑指offer 04
@@ -44,5 +60,58 @@ func BinarySearch(array []int, res int, l int, r int) bool {
 
 //剑指offer 05
 func replaceSpace(s string) string {
-
+	var num []rune
+	for _, v := range s {
+		if v == ' ' {
+			num = append(num, '%', '2', '0')
+		} else {
+			num = append(num, v)
+		}
+	}
+	return string(num)
 }
+
+//剑指offer 07
+func buildTree(preorder []int, inorder []int) *TreeNode {
+	root := new(TreeNode)
+	i := 0
+	for ; i < len(inorder); i++ {
+		if inorder[i] == preorder[0] {
+			root.Val = preorder[0]
+			root.Left = buildTree(preorder[1:i+1], inorder[:i])
+			root.Right = buildTree(preorder[i+1:], inorder[i+1:])
+			return root
+		}
+	}
+	return nil
+}
+
+//剑指offer 10
+func numWays(n int) int {
+	if n == 0 || n == 1 {
+		return 1
+	}
+	dp := make([]int, n+1)
+	dp[0] = 1
+	dp[1] = 1
+	for i := 2; i < n+1; i++ {
+		dp[i] = (dp[i-1] + dp[i-2]) % (1e9 + 7)
+	}
+	return dp[n]
+}
+
+//剑指offer 11
+func minArray(numbers []int) int {
+	l, r := 0, len(numbers)-1
+	for l < r {
+		mid := l + (r-l)/2
+		if numbers[mid] > numbers[r] {
+			l = mid + 1
+		} else if numbers[mid] <= numbers[r] {
+			r = mid
+		}
+	}
+	return numbers[l]
+}
+
+//剑指offer 12

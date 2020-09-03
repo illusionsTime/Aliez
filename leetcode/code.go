@@ -648,3 +648,33 @@ func dfsIsSymmetric(a, b *TreeNode) bool {
 	}
 	return dfsIsSymmetric(a.Left, b.Right) && dfsIsSymmetric(a.Right, b.Left)
 }
+
+//leetcode 34
+func searchRange(nums []int, target int) []int {
+	if len(nums) == 0 {
+		return []int{-1, -1}
+	}
+	first := findTarget(nums, target, 0)
+	last := findTarget(nums, target, 1)
+	return []int{first, last}
+}
+func findTarget(nums []int, target, n int) int { // n区别第一个还是最后一个
+	l, r := 0, len(nums)-1
+	for l <= r {
+		mid := l + (r-l)/2
+		if nums[mid] == target {
+			if n == 0 && mid > 0 && nums[mid-1] == target { // 第一个等于target
+				r = mid - 1
+			} else if n == 1 && mid+1 <= r && nums[mid] == nums[mid+1] { // 最后一个等于target
+				l = mid + 1
+			} else {
+				return mid
+			}
+		} else if nums[mid] > target {
+			r = mid - 1
+		} else {
+			l = mid + 1
+		}
+	}
+	return -1
+}
