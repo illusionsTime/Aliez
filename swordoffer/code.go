@@ -115,3 +115,43 @@ func minArray(numbers []int) int {
 }
 
 //剑指offer 12
+func exist(board [][]byte, word string) bool {
+	row := len(board)
+	line := len(board[0])
+	if row == 0 {
+		return false
+	}
+
+	var DFS func(x, y int, num int) bool
+	DFS = func(x, y int, num int) bool {
+		if x < 0 || y < 0 || x >= line || y >= row {
+			return false
+		}
+		if board[y][x] == word[len(word)-1] && num == len(word)-1 {
+			return true
+		}
+		tmp := board[y][x]
+		board[y][x] = byte(' ')
+		if tmp == word[num] {
+			num++
+			if DFS(x+1, y, num) || DFS(x-1, y, num) || DFS(x, y+1, num) || DFS(x, y-1, num) {
+				return true
+			}
+		}
+		board[y][x] = tmp
+		return false
+	}
+	for i := 0; i < row; i++ {
+		for j := 0; j < line; j++ {
+			if DFS(j, i, 0) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+//剑指offer 13
+func movingCount(m int, n int, k int) int {
+
+}
