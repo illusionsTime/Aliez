@@ -66,3 +66,42 @@ func min(a int, b int) int {
 		return b
 	}
 }
+
+//堆 heap
+var heap []int
+
+func HeapSort(num []int) {
+	var i int
+	size := len(num)
+	for i = size / 2; i >= 0; i-- {
+		PercDown(num, i, size)
+	}
+	for i = size - 1; i > 0; i-- {
+		Swap(num[0], num[i])
+		PercDown(num, 0, i)
+	}
+}
+
+func PercDown(num []int, i int, size int) {
+	var child int
+	var tmp int
+	for tmp = num[i]; 2*i+1 < size; i = child {
+		child = 2*i + 1
+		if child != size-1 && num[child+1] > num[child] {
+			child++
+		}
+		if tmp < num[child] {
+			num[i] = num[child]
+		} else {
+			break
+		}
+	}
+	num[i] = tmp
+}
+
+func Swap(a interface{}, b interface{}) {
+	var tmp interface{}
+	tmp = a
+	a = b
+	b = tmp
+}

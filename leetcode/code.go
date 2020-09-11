@@ -6,10 +6,10 @@ import (
 )
 
 func main() {
-	nums := []int{7, 1, 5, 3, 6, 4}
-	n := maxProfit(nums)
+	nums := []int{3, 2, 1, 5, 6, 4}
+	HeapSort(nums)
 	//mid := size / 2
-	fmt.Printf("%v", n)
+	fmt.Printf("%v", nums)
 }
 
 //插入排序
@@ -677,4 +677,9 @@ func findTarget(nums []int, target, n int) int { // n区别第一个还是最后
 		}
 	}
 	return -1
+}
+
+//leetcode 215
+func findKthLargest(nums []int, k int) int {
+	return 0
 }

@@ -153,5 +153,47 @@ func exist(board [][]byte, word string) bool {
 
 //剑指offer 13
 func movingCount(m int, n int, k int) int {
+	return 0
+}
 
+//剑指offer 29
+func spiralOrder(matrix [][]int) []int {
+	if matrix == nil || len(matrix) == 0 || len(matrix) == 0 {
+		return []int{}
+	}
+	top := 0
+	hsize := len(matrix)
+	lsize := len(matrix[0])
+	left := 0
+
+	bottom := hsize - 1
+	right := lsize - 1
+	index := 0
+	x, y := 0, 0
+	sum := make([]int, hsize*lsize)
+	for bottom >= top && right >= left {
+		for x = left; x <= right; x++ {
+			sum[index] = matrix[top][x]
+			index++
+		}
+		for y = top + 1; y <= bottom; y++ {
+			sum[index] = matrix[y][right]
+			index++
+		}
+		if bottom > top && right > left {
+			for x = right - 1; x > left; x-- {
+				sum[index] = matrix[bottom][x]
+				index++
+			}
+			for y = bottom; y > top; y-- {
+				sum[index] = matrix[y][left]
+				index++
+			}
+		}
+		left++
+		right--
+		top++
+		bottom--
+	}
+	return sum
 }

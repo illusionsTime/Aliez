@@ -9,9 +9,7 @@
 2. 当元素数量大于 4 个时，会将数组中的元素放置到静态区并在运行时取出（copy到栈上）
 
 [详情可以参考这里](https://github.com/golang/go/blob/f07059d949057f414dd0f8303f93ca727d716c62/src/cmd/compile/internal/gc/sinit.go#L875-L967)
-```go
 
-```
 
 ### 切片
 
