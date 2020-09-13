@@ -7,9 +7,9 @@ import (
 
 func main() {
 	nums := []int{3, 2, 1, 5, 6, 4}
-	HeapSort(nums)
+	n := findKthLargest(nums, 3)
 	//mid := size / 2
-	fmt.Printf("%v", nums)
+	fmt.Printf("%v", n)
 }
 
 //插入排序
@@ -681,5 +681,34 @@ func findTarget(nums []int, target, n int) int { // n区别第一个还是最后
 
 //leetcode 215
 func findKthLargest(nums []int, k int) int {
-	return 0
+	size := len(nums)
+	for i := size / 2; i >= 0; i-- {
+		PD(nums, i, size)
+	}
+
+	for j := size - 1; j >= len(nums)-k+1; j-- {
+		nums[0], nums[j] = nums[j], nums[0]
+		size--
+		PD(nums, 0, size)
+	}
+	return nums[0]
 }
+
+func PD(num []int, i int, N int) {
+	var leftchild int
+	var tmp int
+	for tmp = num[i]; i*2+1 < N; i = leftchild {
+		leftchild = 2*i + 1
+		if leftchild+1 < N && num[leftchild+1] > num[leftchild] {
+			leftchild++
+		}
+		if tmp < num[leftchild] {
+			num[i] = num[leftchild]
+		} else {
+			break
+		}
+	}
+	num[i] = tmp
+}
+
+//

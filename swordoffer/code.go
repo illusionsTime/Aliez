@@ -3,9 +3,8 @@ package main
 import "fmt"
 
 func main() {
-	num := []int{1, 3, 5, 8, 0}
-	res := minArray(num)
-	fmt.Printf("%v", res)
+	n := movingCount(1, 2, 1)
+	fmt.Printf("%v", n)
 }
 
 //常用数据结构
@@ -153,7 +152,70 @@ func exist(board [][]byte, word string) bool {
 
 //剑指offer 13
 func movingCount(m int, n int, k int) int {
-	return 0
+	if k == 0 {
+		return 1
+	}
+	dp := make([][]int, m+1)
+	for i := range dp {
+		dp[i] = make([]int, n+1)
+	}
+	var sum int
+	var DFS func(x int, y int)
+	DFS = func(x int, y int) {
+		if x < 0 || y < 0 || x >= m || y >= n {
+			return
+		}
+		if dp[x][y] == 1 {
+			return
+		}
+		if Digitstogether(x)+Digitstogether(y) > k {
+			return
+		}
+		dp[x][y] = 1
+		sum++
+		DFS(x, y+1)
+		DFS(x, y-1)
+		DFS(x+1, y)
+		DFS(x-1, y)
+	}
+	DFS(0, 0)
+	return sum
+}
+
+//位数相加
+func Digitstogether(num int) int {
+	sum := 0
+	for num > 0 {
+		sum += num % 10
+		num = num / 10
+	}
+	return sum
+}
+
+//剑指offer 15
+func hammingWeight(num uint32) int {
+	count := 0
+	for 0 < num {
+		if num%2 == 1 {
+			count++
+		}
+		num /= 2
+	}
+	return count
+}
+
+//剑指offer 15
+func printNumbers(n int) []int {
+	s := 1
+	for i := 1; i <= n; i++ {
+		s = 10 * s
+	}
+	s = s - 1
+	num := make([]int, s)
+	for i := 0; i < s; i++ {
+		num[i] = i + 1
+	}
+	return num
 }
 
 //剑指offer 29
@@ -197,3 +259,5 @@ func spiralOrder(matrix [][]int) []int {
 	}
 	return sum
 }
+
+//剑指offer 34

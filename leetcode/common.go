@@ -1,6 +1,8 @@
 package main
 
-import "errors"
+import (
+	"errors"
+)
 
 //栈
 type stack []interface{}
@@ -73,6 +75,7 @@ var heap []int
 func HeapSort(num []int) {
 	var i int
 	size := len(num)
+	//从最深处父节点构造堆
 	for i = size / 2; i >= 0; i-- {
 		PercDown(num, i, size)
 	}
@@ -86,10 +89,12 @@ func PercDown(num []int, i int, size int) {
 	var child int
 	var tmp int
 	for tmp = num[i]; 2*i+1 < size; i = child {
-		child = 2*i + 1
+		child = 2*i + 1 //child是左儿子
+		//找到更大的儿子节点
 		if child != size-1 && num[child+1] > num[child] {
 			child++
 		}
+		//如果当前父节点小于儿子节点，交换位置
 		if tmp < num[child] {
 			num[i] = num[child]
 		} else {
