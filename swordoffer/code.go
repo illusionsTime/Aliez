@@ -3,7 +3,8 @@ package main
 import "fmt"
 
 func main() {
-	n := movingCount(1, 2, 1)
+	nums := []int{1, 2, 3, 4, 5}
+	n := exchange(nums)
 	fmt.Printf("%v", n)
 }
 
@@ -218,6 +219,31 @@ func printNumbers(n int) []int {
 	return num
 }
 
+//剑指offer 21
+func exchange(nums []int) []int {
+	size := len(nums)
+	if size == 1 || nums == nil {
+		return nums
+	}
+	r, l := size-1, 0
+	for l < r {
+		if nums[l]%2 == 0 && nums[r]%2 != 0 {
+			var tmp int
+			tmp = nums[l]
+			nums[l] = nums[r]
+			nums[r] = tmp
+		}
+		if nums[l]%2 != 0 {
+			l++
+		}
+		if nums[r]%2 == 0 {
+			r--
+		}
+		fmt.Printf("%v", nums)
+	}
+	return nums
+}
+
 //剑指offer 29
 func spiralOrder(matrix [][]int) []int {
 	if matrix == nil || len(matrix) == 0 || len(matrix) == 0 {
@@ -260,4 +286,100 @@ func spiralOrder(matrix [][]int) []int {
 	return sum
 }
 
-//剑指offer 34
+//剑指offer 26
+func isSubStructure(A *TreeNode, B *TreeNode) bool {
+	if A == nil || B == nil {
+		return false
+	}
+	var judge func(A *TreeNode, B *TreeNode) bool
+	judge = func(A *TreeNode, B *TreeNode) bool {
+		if B == nil {
+			return true
+		}
+		if A == nil && B != nil {
+			return false
+		}
+		if A.Val != B.Val {
+			return false
+		}
+		return judge(A.Left, B.Left) && judge(A.Right, B.Right)
+	}
+	return judge(A, B) || isSubStructure(A.Left, B) || isSubStructure(A.Right, B)
+}
+
+//剑指offer 27
+func mirrorTree(root *TreeNode) *TreeNode {
+	if root == nil {
+		return nil
+	}
+	root.Left, root.Right = root.Right, root.Left
+	mirrorTree(root.Left)
+	mirrorTree(root.Right)
+	return root
+}
+
+//剑指offer 31
+func validateStackSequences(pushed []int, popped []int) bool {
+	stack := make([]int, 0, len(pushed))
+	i := 0
+	for _, v := range pushed {
+		stack = append(stack, v)
+		for len(stack) != 0 && stack[len(stack)-1] == popped[i] {
+			stack = stack[:len(stack)-1]
+			i++
+		}
+	}
+	if len(stack) == 0 {
+		return true
+	} else {
+		return false
+	}
+
+}
+
+//剑指offer 32
+func levelOrder(root *TreeNode) []int {
+	sum := make([]int, 0)
+	if root == nil {
+		return sum
+	}
+	var queue []*TreeNode
+	queue = append(queue, root)
+	for len(queue) != 0 {
+		l := len(queue)
+		for i := 0; i < l; i++ {
+			node := queue[i]
+			sum = append(sum, node.Val)
+			if node.Left != nil {
+				queue = append(queue, node.Left)
+			}
+			if node.Right != nil {
+				queue = append(queue, node.Right)
+			}
+		}
+		queue = queue[l:]
+	}
+	return sum
+}
+
+//剑指offer 33 二叉搜索树的后序遍历
+func verifyPostorder(postorder []int) bool {
+	size := len(postorder)
+	var slove func(num []int, i, j int) bool
+	slove = func(num []int, i, j int) bool {
+		if i >= j {
+			return true
+		}
+		piovt := num[j]
+		k := i
+		for num[k] < piovt {
+			k++
+		}
+		m := k
+		for num[k] > piovt {
+			k++
+		}
+		return k == j && slove(num, i, m-1) && slove(num, m, j-1)
+	}
+	return slove(postorder, 0, size-1)
+}
