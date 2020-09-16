@@ -711,4 +711,48 @@ func PD(num []int, i int, N int) {
 	num[i] = tmp
 }
 
-//
+//leetcode 92 反转链表
+func reverseBetween(head *ListNode, m int, n int) *ListNode {
+	sentry := &ListNode{
+		Next: head,
+	}
+	prem := sentry
+	for i := 1; i < m-1; i++ {
+		prem = prem.Next
+	} //prem为m的前一个节点
+	poivt := prem.Next
+	pre := new(ListNode)
+	for i := m; i <= n; i++ {
+		tmp := poivt.Next
+		poivt.Next = pre
+		pre = poivt
+		poivt = tmp
+	}
+	prem.Next.Next = poivt
+	prem.Next = pre
+	return sentry.Next
+}
+
+//leetcode 287 查找重复数
+func findDuplicate(nums []int) int {
+	size := len(nums)
+	left, right := 1, size-1
+	ans := -1
+	for left <= right {
+		count := 0
+		mid := left + (right-left)>>1
+		for i := 0; i < size; i++ {
+			if nums[i] <= mid {
+				count++
+			}
+		}
+		if count <= mid {
+			left = mid + 1
+		} else {
+			right = mid - 1
+			ans = mid
+		}
+
+	}
+	return ans
+}
