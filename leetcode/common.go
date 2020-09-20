@@ -69,7 +69,7 @@ func min(a int, b int) int {
 	}
 }
 
-//堆 heap
+//堆排序
 var heap []int
 
 func HeapSort(num []int) {
@@ -109,4 +109,132 @@ func Swap(a interface{}, b interface{}) {
 	tmp = a
 	a = b
 	b = tmp
+}
+
+//插入排序
+func InsertSort(A []int) {
+	var tmp, j int
+	N := len(A)
+	for i := 0; i < N; i++ {
+		tmp = A[i]
+		for j = i; j > 0 && A[j-1] > tmp; j-- {
+			A[j] = A[j-1]
+		}
+		A[j] = tmp
+	}
+}
+
+//归并排序
+func MergeSort(A []int) {
+	//分配额外空间
+	N := len(A)
+	tmp := make([]int, N)
+	if tmp != nil {
+		MSort(A, tmp, 0, N-1)
+	} else {
+		errors.New("No space for tmp array!")
+	}
+
+}
+
+func MSort(A []int, tmp []int, Left int, Right int) {
+	var Center int
+	if Left < Right {
+		//拆分左右数组 递归进行排序
+		Center = (Left + Right) / 2
+		MSort(A, tmp, Left, Center)
+		MSort(A, tmp, Center+1, Right)
+		//合并左右数组
+		Merge(A, tmp, Left, Center+1, Right)
+	}
+}
+
+func Merge(A []int, TmpArray []int, Lptr int, Rptr int, REnd int) {
+	LEnd := Rptr - 1
+	TmpPos := Lptr
+	NumElements := REnd - Lptr + 1
+
+	//
+	for Lptr <= LEnd && Rptr <= REnd {
+		if A[Lptr] <= A[Rptr] {
+			TmpArray[TmpPos] = A[Lptr]
+			TmpPos++
+			Lptr++
+		} else {
+			TmpArray[TmpPos] = A[Rptr]
+			TmpPos++
+			Rptr++
+		}
+	}
+	//
+	for Lptr <= LEnd {
+		TmpArray[TmpPos] = A[Lptr]
+		TmpPos++
+		Lptr++
+	}
+	//
+	for Rptr <= REnd {
+		TmpArray[TmpPos] = A[Rptr]
+		TmpPos++
+		Rptr++
+	}
+
+	//重新填入A数组
+	for i := 0; i < NumElements; i, REnd = i+1, REnd-1 {
+		A[REnd] = TmpArray[REnd]
+	}
+}
+
+//希尔排序
+func ShellSort(num []int) {
+	var tmp int
+	var i, j int
+	N := len(num)
+	for Increment := N / 2; Increment > 0; Increment = Increment / 2 {
+		for i = Increment; i < N; i++ {
+			tmp = num[i]
+			for j = i; j >= Increment; j -= Increment {
+				if tmp < num[j-Increment] {
+					num[j] = num[j-Increment]
+				} else {
+					break
+				}
+			}
+			num[j] = tmp
+		}
+	}
+}
+
+//快速排序
+func QSort(num []int, left, right int) {
+	if right > left {
+		pivot := partition(num, left, right)
+		QSort(num, left, pivot-1)
+		QSort(num, pivot+1, right)
+	}
+}
+
+func partition(list []int, low, high int) int {
+	pivot := list[low] //导致 low 位置值为空
+	for low < high {
+		//high指针值 >= pivot high指针👈移
+		for low < high && pivot <= list[high] {
+			high--
+		}
+		//填补low位置空值
+		//high指针值 < pivot high值 移到low位置
+		//high 位置值空
+		list[low] = list[high]
+		//low指针值 <= pivot low指针👉移
+		for low < high && pivot >= list[low] {
+			low++
+		}
+		//填补high位置空值
+		//low指针值 > pivot low值 移到high位置
+		//low位置值空
+		list[high] = list[low]
+	}
+	//pivot 填补 low位置的空值
+	list[low] = pivot
+	return low
 }

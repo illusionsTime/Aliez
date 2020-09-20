@@ -1,89 +1,14 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 )
 
 func main() {
 	nums := []int{3, 2, 1, 5, 6, 4}
-	n := findKthLargest(nums, 3)
+	QSort(nums, 0, len(nums)-1)
 	//mid := size / 2
-	fmt.Printf("%v", n)
-}
-
-//插入排序
-func InsertSort(A []int) {
-	var tmp, j int
-	N := len(A)
-	for i := 0; i < N; i++ {
-		tmp = A[i]
-		for j = i; j > 0 && A[j-1] > tmp; j-- {
-			A[j] = A[j-1]
-		}
-		A[j] = tmp
-	}
-}
-
-//归并排序
-func MergeSort(A []int) {
-	//分配额外空间
-	N := len(A)
-	tmp := make([]int, N)
-	if tmp != nil {
-		MSort(A, tmp, 0, N-1)
-	} else {
-		errors.New("No space for tmp array!")
-	}
-
-}
-
-func MSort(A []int, tmp []int, Left int, Right int) {
-	var Center int
-	if Left < Right {
-		//拆分左右数组 递归进行排序
-		Center = (Left + Right) / 2
-		MSort(A, tmp, Left, Center)
-		MSort(A, tmp, Center+1, Right)
-		//合并左右数组
-		Merge(A, tmp, Left, Center+1, Right)
-	}
-}
-
-func Merge(A []int, TmpArray []int, Lptr int, Rptr int, REnd int) {
-	LEnd := Rptr - 1
-	TmpPos := Lptr
-	NumElements := REnd - Lptr + 1
-
-	//
-	for Lptr <= LEnd && Rptr <= REnd {
-		if A[Lptr] <= A[Rptr] {
-			TmpArray[TmpPos] = A[Lptr]
-			TmpPos++
-			Lptr++
-		} else {
-			TmpArray[TmpPos] = A[Rptr]
-			TmpPos++
-			Rptr++
-		}
-	}
-	//
-	for Lptr <= LEnd {
-		TmpArray[TmpPos] = A[Lptr]
-		TmpPos++
-		Lptr++
-	}
-	//
-	for Rptr <= REnd {
-		TmpArray[TmpPos] = A[Rptr]
-		TmpPos++
-		Rptr++
-	}
-
-	//重新填入A数组
-	for i := 0; i < NumElements; i, REnd = i+1, REnd-1 {
-		A[REnd] = TmpArray[REnd]
-	}
+	fmt.Printf("%v", nums)
 }
 
 /**
@@ -755,4 +680,45 @@ func findDuplicate(nums []int) int {
 
 	}
 	return ans
+}
+
+//Leetcode 55  贪心
+func canJump(nums []int) bool {
+	maxlen := nums[0]
+	size := len(nums)
+	if maxlen == 0 && size > 1 {
+		return false
+	}
+	for i := 0; i < size-1; i++ {
+		if maxlen < i {
+			return false
+		}
+		if i+nums[i] > maxlen {
+			maxlen = i + nums[i]
+		}
+	}
+	if maxlen >= size-1 {
+		return true
+	}
+	return false
+}
+
+//LeetCode 621 任务调度器
+func leastInterval(tasks []byte, n int) int {
+	charSlice := [26]int{}
+	max := 0
+	count := 0
+	for i := 0; i < len(tasks); i++ {
+		charSlice[tasks[i]-'A']++
+		if max < charSlice[tasks[i]-'A'] {
+			max = charSlice[tasks[i]-'A']
+			count = 1
+		} else if charSlice[tasks[i]-'A'] == max {
+			count++
+		}
+	}
+	if n == 0 || (max-1)*(n+1)+count < len(tasks) {
+		return len(tasks)
+	}
+	return (max-1)*(n+1) + count
 }
