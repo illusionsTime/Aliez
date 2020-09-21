@@ -5,10 +5,10 @@ import (
 )
 
 func main() {
-	nums := []int{3, 2, 1, 5, 6, 4}
-	QSort(nums, 0, len(nums)-1)
+	nums := []int{3, 2, 1, 2, 4, 3}
+	ans := minSubArrayLen(7, nums)
 	//mid := size / 2
-	fmt.Printf("%v", nums)
+	fmt.Printf("%v", ans)
 }
 
 /**
@@ -721,4 +721,28 @@ func leastInterval(tasks []byte, n int) int {
 		return len(tasks)
 	}
 	return (max-1)*(n+1) + count
+}
+
+//leetcode 209
+func minSubArrayLen(s int, nums []int) int {
+	size := len(nums)
+	if size == 0 {
+		return 0
+	}
+	sum := 0
+	ans := size + 1
+	start, end := 0, 0
+	for end < size {
+		sum += nums[end]
+		for sum >= s {
+			ans = min(ans, end-start+1)
+			sum -= nums[start]
+			start++
+		}
+		end++
+	}
+	if ans == size+1 {
+		return 0
+	}
+	return ans
 }

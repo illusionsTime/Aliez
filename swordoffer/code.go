@@ -383,3 +383,38 @@ func verifyPostorder(postorder []int) bool {
 	}
 	return slove(postorder, 0, size-1)
 }
+
+//剑指offer 40
+func getLeastNumbers(arr []int, k int) []int {
+	if k >= len(arr) {
+		return arr
+	}
+	return quickselect(arr, 0, len(arr)-1, k)
+}
+
+func quickselect(arr []int, left, right int, k int) []int {
+	if left < right {
+		index := partition(arr, left, right)
+		if index == k {
+			return arr[:k]
+		} else if index > k {
+			return quickselect(arr, left, index-1, k)
+		} else if index < k {
+			return quickselect(arr, index+1, right, k)
+		}
+	}
+	return arr[:k]
+}
+
+func partition(num []int, l, r int) int {
+	poivt := num[l]
+	index := l + 1
+	for i := index; i <= r; i++ {
+		if num[i] < poivt {
+			num[i], num[index] = num[index], num[i]
+			index++
+		}
+	}
+	num[l], num[index-1] = num[index-1], num[l]
+	return index - 1
+}
