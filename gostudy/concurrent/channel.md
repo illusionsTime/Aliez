@@ -452,4 +452,56 @@ func pse() {
    |
    |
 ```
+```go
+package main
 
+import(
+	"fmt"
+	"time"
+)
+
+type query struct{
+	//参数channel  作为taskchan接收主程的信息
+	sql chan string
+	//结果channel
+	result chan string
+}
+
+//执行Query
+func execQuery(q query){
+	//启动协程
+	go func(){
+		//read task
+		sql:=<-q.sql
+
+		//访问数据库
+
+		//输出结果通道
+		q.result<-"result from"+sql
+	}()
+}
+
+func main(){
+	//初始化Query
+	q:=query{make(chan string,1),make(chan string 1)}
+	//执行Query
+	go execQuery(q)
+	//发送参数
+	q.sql<-"select * from table"
+	//并行处理其他事情
+	time.Sleep(1 *time.Second)
+	//获取结果
+	fmt.Println(<-q.result)
+}
+```
+#### 优点
+future 最大的好处将函数的同步调用转换为异步调用。
+
+### 协程池
+参考channel.go
+
+定义一个Pool，包括对外接收task的入口channel，一个分发任务的channel，一个cap确定协程池内固定协程数量。
+
+main函数开一个协程不断地向Pool中输送任务，Pool在Run的过程中，启动cap数量的worker，并不断地将channel中的任务送进分发
+
+任务的channel中，worker不断地从内部队列里面拿到任务执行。

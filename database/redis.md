@@ -19,3 +19,11 @@ struct sdschdr{
 
 Redis 的字典使用哈希表作为底层实现之一
 
+### 跳跃表
+跳跃表（skiplist）是一种有序数据结构，通过每个节点维持多个指向其它节点的指针，从达到快速访问的目的。
+*跳跃表支持平均O(logN)、最坏O(N)复杂度的查找*，还可以通过顺序性操作来批处理结点。
+
+Redis使用skiplist作为zset的底层实现之一，如果一个有序集合包含的元素数量比较多，又或者有序集合中的元素的成员是比较长的字符串时，Redis就会使用skiplist来作为zset的底层实现。
+
+####  实现
+Redis的跳跃表的实现由在skiplistNode和在skiplist两个数据结构定义,其中zskiplistNode结构用于表示跳跃表结点，而在zskiplist结构则用于保存跳跃表结点的相关信息。
