@@ -746,3 +746,15 @@ func minSubArrayLen(s int, nums []int) int {
 	}
 	return ans
 }
+
+//leetcode 3 不含重复元素最长长度
+func lengthOfLongestSubstring(s string) int {
+	//滑动窗口
+	return 0
+}
+
+//leetcode 5 最长回文子串
+func longestPalindrome(s string) string {
+	//动态规划
+	return ""
+}

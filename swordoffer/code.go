@@ -418,3 +418,21 @@ func partition(num []int, l, r int) int {
 	num[l], num[index-1] = num[index-1], num[l]
 	return index - 1
 }
+
+//剑指offer 57
+func twoSum(nums []int, target int) []int {
+	if len(nums) < 2 {
+		return nil
+	}
+	i, j := 0, len(nums)-1
+	for i != j {
+		if nums[i]+nums[j] == target {
+			return []int{nums[i], nums[j]}
+		} else if nums[i]+nums[j] < target {
+			i++
+		} else if nums[i]+nums[j] > target {
+			j--
+		}
+	}
+	return nil
+}
