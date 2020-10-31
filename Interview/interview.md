@@ -28,6 +28,11 @@
 	- [二面](#二面-4)
 - [字节跳动 懂车帝](#字节跳动-懂车帝)
 	- [一面](#一面-7)
+- [BIGO](#bigo)
+	- [一面](#一面-8)
+- [腾讯](#腾讯)
+	- [一面](#一面-9)
+	- [二面](#二面-5)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -287,7 +292,7 @@ zset结构中的zsl跳跃表按分值从小到大保存了所有的集合元素�
 
 * ping指令的实现
 这个在tcp/ip详解里是有的，可惜偷懒没认真看。
-
+ICMP的回显请求和回显应答
 
 * linux的用户态和内核态
   为了保证操作系统的稳定和安全，内核依据由CPU提供的，可以让进程驻留的特权级别建立了两个特权状态——内核态和用户态。
@@ -304,7 +309,7 @@ zset结构中的zsl跳跃表按分值从小到大保存了所有的集合元素�
   
 ### 二面
   百度的面试体验真的是面试过最好的，面试官会根据你的项目设计题目，和你一起探讨解决方法。
-  最后出了一道算法题，有10个元素存到长度为12的数组中，有两个元素重复，找出这两个元素
+  最后出了一道智力题，有10个元素存到长度为12的数组中，有两个元素重复，找出这两个元素
   开始想到通过一次遍历异或的过程，但是只限于一个元素重复，后面面试官提醒了一下可以找到ab元素的关系  
   比如a+b通过把元素累加在进行减法运算可以得到a+b
   通过累乘再进行除法运算可以得到a*b的值  
@@ -460,3 +465,60 @@ Grpc的过程
 * 算法题 10进制转7进制
 * 算法题 判断数独的有效性
 
+## BIGO 
+### 一面
+* 普罗米修斯
+* linux tcp 半连接
+* 常见的linux指令
+  tail pwd chmod lsof netstat top
+* 实现一个压测工具
+  golang编写一个http客户端，支持参数httprequest -c 5 -r 1000 http://**** 客户端，输出所有响应
+* string类型加法实现
+* sql题
+ ```sql
+ CREATE TABLE IF NOT EXISTS `mytable` (
+    `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+    `video_id` bigint unsigned NOT NULL DEFAULT 0,
+    `uid` int unsigned NOT NULL DEFAULT 0,
+    `country` varchar(194)  NOT NULL ,
+    `class` varchar(64)  NOT NULL ,
+    `status` tinyint(4) unsigned NOT NULL DEFAULT '0',
+    `video_view` bigint(20) unsigned NOT NULL DEFAULT '0',
+    `created` timestamp  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (
+        `id`
+    )
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+SELECT * FROM mytable WHERE created > ? AND class = ? AND country IN (?) ORDER BY created DESC LIMIT 100;
+SELECT * FROM mytable WHERE class = ? AND country IN (?) ORDER BY video_view DESC LIMIT 100;
+SELECT * FROM mytable WHERE created > ? AND class IN (?) LIMIT 100;
+SELECT * FROM mytable WHERE created > ? AND country IN (?) LIMIT 100;
+```
+
+* map如何实现顺序读取
+空间换时间
+借助额外的数据结构比如slice 等，对key进行排序，遍历slice得到顺序输出
+* 协程泄露
+如果你启动了一个 goroutine，但并没有符合预期的退出，直到程序结束，此goroutine才退出，这种情况就是 goroutine 泄露。当 goroutine 泄露发生时，该 goroutine 的栈(一般 2k 内存空间起)一直被占用不能释放，goroutine 里的函数在堆上申请的空间也不能被 垃圾回收器 回收。
+* 空结构体的用处
+  空结构体不占用内存空间
+  1. 实现set
+  2. 实现chan struct{} 不占用内存空间，实现传递信号的通道
+剩下的忘了 面了两个小时 说实话没吃晚饭一个小时就开始神志不清了 
+
+
+## 腾讯
+### 一面
+* golang的多路复用
+* fasthttp为什么快
+* pprof使用
+* 性能调优怎么做
+* http2.0的多路复用怎么实现的
+* 最大连续子序列和
+* mysql怎么监控流量
+
+### 二面
+项目 场景设计 秒杀系统 抽奖系统 QQ看点推荐系统
+etcd和zk的区别，包括Raft算法
+面试官应该是组长，说你简历上写的不问，没写的去问。
