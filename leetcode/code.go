@@ -758,3 +758,20 @@ func longestPalindrome(s string) string {
 	//动态规划
 	return ""
 }
+
+//leetcode 146 LRU
+type LRUCache struct {
+	len int
+}
+
+func Constructor(capacity int) LRUCache {
+
+}
+
+func (this *LRUCache) Get(key int) int {
+
+}
+
+func (this *LRUCache) Put(key int, value int) {
+
+}

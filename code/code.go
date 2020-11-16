@@ -50,11 +50,6 @@ func CheckNum(nums []int, target int) []int {
 	return res
 }
 
-type Node struct {
-	Next *Node
-	Val  int
-}
-
 func MergeLink(h1 *Node, h2 *Node) *Node {
 	sentry1 := h1
 	sentry2 := h2
@@ -85,7 +80,23 @@ func MergeLink(h1 *Node, h2 *Node) *Node {
 }
 
 func main() {
-	defer_call()
+	t1 := new(Tree)
+	t2 := new(Tree)
+	t3 := new(Tree)
+	t4 := new(Tree)
+	t1.Left = t2
+	t1.Right = t3
+	t1.Val = 1
+	t2.Val = 2
+	t2.Left = t4
+	t2.Right = nil
+	t3.Val = 3
+	t3.Left = nil
+	t3.Right = nil
+	t4.Val = 4
+	t4.Left = nil
+	t4.Right = nil
+	slove(t1)
 }
 
 func defer_call() {
@@ -139,4 +150,75 @@ func Serch(nums []int) int {
 		}
 	}
 	return 0
+}
+
+func getmax(num []int) int {
+	size := len(num)
+	var sum int
+	sum = num[0]
+	dp := make([]int, size)
+	dp[0] = num[0]
+	for i := 1; i < size; i++ {
+		if dp[i-1]+num[i] > 0 {
+			dp[i] = dp[i-1] + num[i]
+		}
+		sum = max(dp[i], sum)
+	}
+	return sum
+}
+
+type Node struct {
+	Next *Node
+	Val  int
+}
+
+func MergeNode(h1 *Node, h2 *Node, h3 *Node) *Node {
+	h := Merge(h1, h2)
+	return Merge(h, h3)
+}
+
+func Merge(h1 *Node, h2 *Node) *Node {
+	sentry := new(Node)
+	res := sentry
+	for h1 != nil && h2 != nil {
+		if h1.Val >= h2.Val {
+			sentry.Next = h2
+			h2 = h2.Next
+		} else {
+			sentry.Next = h1
+			h1 = h1.Next
+		}
+		sentry = sentry.Next
+	}
+	if h1 == nil && h2 != nil {
+		sentry.Next = h2
+	}
+	if h1 != nil && h2 == nil {
+		sentry.Next = h1
+
+	}
+	return res.Next
+}
+
+type Tree struct {
+	Val   int
+	Left  *Tree
+	Right *Tree
+}
+
+func slove(t *Tree) {
+	if t == nil {
+		return
+	}
+	var DFS func(t *Tree)
+	DFS = func(t *Tree) {
+		fmt.Printf("%v", t.Val)
+		if t.Left != nil {
+			DFS(t.Left)
+		}
+		if t.Right != nil {
+			DFS(t.Right)
+		}
+	}
+	DFS(t)
 }
